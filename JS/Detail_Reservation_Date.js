@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reservations = data.reservations.filter(res => res.idImmobilier === houseId);
             let reservedDates = [];
 
+            // Collecte des dates réservées
             reservations.forEach(res => {
                 let currentDate = new Date(res.dateDebut);
                 const endDate = new Date(res.dateFin);
@@ -25,19 +26,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Configuration du calendrier avec Flatpickr
-            function setupFlatpickr(input) {
-                flatpickr(input, {
-                    dateFormat: "Y-m-d",
-                    disable: reservedDates.map(date => ({ from: date, to: date })),
-                    locale: {
-                        firstDayOfWeek: 1 // Commence la semaine le lundi
-                    }
-                });
-            }
+            // Configuration du calendrier Flatpickr
+            let checkinCalendar = flatpickr(checkinInput, {
+                dateFormat: "Y-m-d",
+                disable: reservedDates.map(date => ({ from: date, to: date })),
+                minDate: new Date().fp_incr(1), // Date minimum : lendemain de la date actuelle
+                locale: {
+                    firstDayOfWeek: 1 // Lundi comme premier jour
+                },
+                onChange: (selectedDates) => {
+                    if (selectedDates.length > 0) {
+                        const minCheckoutDate = new Date(selectedDates[0]);
+                        minCheckoutDate.setDate(minCheckoutDate.getDate() + 1); // La date de fin doit être au moins le lendemain
+                        checkoutCalendar.set('minDate', minCheckoutDate);
 
-            setupFlatpickr(checkinInput);
-            setupFlatpickr(checkoutInput);
+                        // Optionnel : Réinitialiser la date de départ si elle est avant la nouvelle minDate
+                        if (checkoutInput.value && new Date(checkoutInput.value) <= minCheckoutDate) {
+                            checkoutInput.value = '';
+                        }
+                    }
+                }
+            });
+
+            let checkoutCalendar = flatpickr(checkoutInput, {
+                dateFormat: "Y-m-d",
+                disable: reservedDates.map(date => ({ from: date, to: date })),
+                minDate: new Date().fp_incr(2), // Par défaut, au moins le surlendemain
+                locale: {
+                    firstDayOfWeek: 1
+                }
+            });
         })
         .catch(err => console.error("Erreur lors du chargement des réservations :", err));
 });
