@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Récupérer l'ID de la maison dans l'URL (ex: detail.html?houseId=1)
     const params = new URLSearchParams(window.location.search);
     const houseId = params.get('houseId');
 
@@ -8,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Récupérer les données JSON
     fetch('Data_Base/Immobilier.json')
         .then(response => response.json())
         .then(data => {
@@ -40,8 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Récupération des images extérieures et intérieures
             const exterieurImages = getValidImages(house.Exterieur);
             const interieurImages = getValidImages(house.Interieur);
-
-            // Fusion des images (Extérieur en premier, puis Intérieur)
             const allImages = [...exterieurImages, ...interieurImages];
 
             // Gestion de l'image principale
@@ -51,11 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 mainImage.src = "Media/Immobilier/erreur_image.jpg";
             };
 
-            // Vérification de l'existence du conteneur des vignettes
+            // ✅ Si le conteneur des vignettes existe :
             if (thumbnailsContainer) {
                 thumbnailsContainer.innerHTML = ''; // Nettoyer les vignettes existantes
 
-                // Générer les vignettes
+                // ✅ Créer une structure avec flèches et conteneur
+                const upArrow = document.createElement('button');
+                upArrow.classList.add('arrow', 'up-arrow');
+                upArrow.innerHTML = '▲';
+
+                const thumbnailsWrapper = document.createElement('div');
+                thumbnailsWrapper.classList.add('thumbnails-wrapper');
+
+                const downArrow = document.createElement('button');
+                downArrow.classList.add('arrow', 'down-arrow');
+                downArrow.innerHTML = '▼';
+
+                // ✅ Insérer dans le conteneur
+                thumbnailsContainer.appendChild(upArrow);
+                thumbnailsContainer.appendChild(thumbnailsWrapper);
+                thumbnailsContainer.appendChild(downArrow);
+
+                // ✅ Générer les vignettes
                 allImages.forEach((imgName, index) => {
                     const thumb = document.createElement('img');
                     thumb.src = "Media/Immobilier/" + imgName;
@@ -74,28 +87,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         thumb.classList.add('active');
                     });
 
-                    thumbnailsContainer.appendChild(thumb);
+                    thumbnailsWrapper.appendChild(thumb);
 
                     // Définir la première vignette comme active
                     if (index === 0) {
                         thumb.classList.add('active');
                     }
                 });
-            } else {
-                console.warn("Le conteneur des vignettes n'existe pas !");
+
+                // ✅ Gestion des flèches de défilement
+                const scrollAmount = 100; // Nombre de pixels à faire défiler
+                upArrow.addEventListener('click', () => {
+                    thumbnailsWrapper.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+                });
+
+                downArrow.addEventListener('click', () => {
+                    thumbnailsWrapper.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                });
             }
         })
         .catch(err => {
             console.error("Erreur lors du chargement du JSON :", err);
         });
 
-    // 4. Gérer le bouton "Réserver"
+    // ✅ Gérer le bouton "Réserver"
     const reserveBtn = document.getElementById('reserve-btn');
     if (reserveBtn) {
         reserveBtn.addEventListener('click', () => {
             window.location.href = "Reservation.html";
         });
-    } else {
-        console.warn("Le bouton de réservation n'existe pas !");
     }
 });
